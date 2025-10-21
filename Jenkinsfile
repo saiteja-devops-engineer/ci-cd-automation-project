@@ -8,25 +8,10 @@ pipeline {
         timestamps()
     }
     stages {
-        stage('Build') {
+        stage('Checkout Repository') {
             steps {
-                echo 'Started building package from the App code.'
-                sleep 2
-                echo 'Completed Build package from code.'
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing the App Package.'
-                sleep 2
-                echo 'Completed Testing of the App Package.'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Started Deploying the App.'
-                sleep 2
-                echo 'Completed Deploying the App.'
+                checkout scm
+                // git url: 'git@github.com:your-user/your-repo.git', branch: 'main'
             }
         }
     }
