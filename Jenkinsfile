@@ -1,8 +1,7 @@
 pipeline {
     agent any
     tools {
-        git 'GIT_2_43'
-        python 'PYTHON_3_12_3'
+        git 'GIT_2_43'  // Your Git tool configured in Jenkins
     }
     environment {
         VENV_DIR = '/opt/python3_vir_env'
@@ -28,11 +27,20 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                sh '''
-                    source $VENV_DIR/bin/activate
-                    pip install --upgrade pip
-                    pip install -r flask_app/requirements.txt
-                '''
+                // Using ShiningPanda to select Python
+                withPython(python: 'PYTHON_3_12_3') {
+                    sh '''
+                        # Create virtual environment if it doesn't exist
+                        [ ! -d "${VENV_DIR}" ] && python -m venv ${VENV_DIR}
+
+                        # Activate virtual environment
+                        source $VENV_DIR/bin/activate
+
+                        # Upgrade pip and install dependencies
+                        pip install --upgrade pip
+                        pip install -r flask_app/requirements.txt
+                    '''
+                }
             }
         }
         stage('Run Flask App') {
@@ -40,23 +48,33 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                sh '''
-                    source $VENV_DIR/bin/activate
-                    python -m flask --version || { echo "Flask not found"; exit 1; }
-                    python flask_app/app.py & 
+                // Using ShiningPanda to select Python
+                withPython(python: 'PYTHON_3_12_3') {
+                    sh '''
+                        # Activate virtual environment
+                        source $VENV_DIR/bin/activate
 
-                    timeout=0
-                    while ! curl -s http://127.0.0.1:5000 > /dev/null; do
-                        sleep 2
-                        timeout=$((timeout+2))
-                        if [ $timeout -gt 20 ]; then
-                            echo "Flask did not start in 20 seconds"
-                            exit 1
-                        fi
-                    done
+                        # Ensure Flask is installed
+                        python -m flask --version || { echo "Flask not found"; exit 1; }
 
-                    curl http://127.0.0.1:5000
-                '''
+                        # Start Flask in background
+                        python flask_app/app.py & 
+
+                        # Wait loop for Flask startup (max 20s)
+                        timeout=0
+                        while ! curl -s http://127.0.0.1:5000 > /dev/null; do
+                            sleep 2
+                            timeout=$((timeout+2))
+                            if [ $timeout -gt 20 ]; then
+                                echo "Flask did not start in 20 seconds"
+                                exit 1
+                            fi
+                        done
+
+                        # Test endpoint
+                        curl http://127.0.0.1:5000
+                    '''
+                }
             }
         }
     }
