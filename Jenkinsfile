@@ -27,19 +27,21 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                // Using ShiningPanda to select Python
-                withPythonEnv(python: 'PYTHON_3_12_3') {
-                    sh '''
-                        # Create virtual environment if it doesn't exist
-                        [ ! -d "${VENV_DIR}" ] && python -m venv ${VENV_DIR}
+                script {
+                    // Using ShiningPanda to select Python
+                    withPythonEnv(python: 'PYTHON_3_12_3') {
+                        sh '''
+                            # Create virtual environment if it doesn't exist
+                            [ ! -d "${VENV_DIR}" ] && python -m venv ${VENV_DIR}
 
-                        # Activate virtual environment
-                        source $VENV_DIR/bin/activate
+                            # Activate virtual environment
+                            source $VENV_DIR/bin/activate
 
-                        # Upgrade pip and install dependencies
-                        pip install --upgrade pip
-                        pip install -r flask_app/requirements.txt
-                    '''
+                            # Upgrade pip and install dependencies
+                            pip install --upgrade pip
+                            pip install -r flask_app/requirements.txt
+                        '''
+                    }
                 }
             }
         }
@@ -48,32 +50,34 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                // Using ShiningPanda to select Python
-                withPythonEnv(python: 'PYTHON_3_12_3') {
-                    sh '''
-                        # Activate virtual environment
-                        source $VENV_DIR/bin/activate
+                script {
+                    // Using ShiningPanda to select Python
+                    withPythonEnv(python: 'PYTHON_3_12_3') {
+                        sh '''
+                            # Activate virtual environment
+                            source $VENV_DIR/bin/activate
 
-                        # Ensure Flask is installed
-                        python -m flask --version || { echo "Flask not found"; exit 1; }
+                            # Ensure Flask is installed
+                            python -m flask --version || { echo "Flask not found"; exit 1; }
 
-                        # Start Flask in background
-                        python flask_app/app.py & 
+                            # Start Flask in background
+                            python flask_app/app.py & 
 
-                        # Wait loop for Flask startup (max 20s)
-                        timeout=0
-                        while ! curl -s http://127.0.0.1:5000 > /dev/null; do
-                            sleep 2
-                            timeout=$((timeout+2))
-                            if [ $timeout -gt 20 ]; then
-                                echo "Flask did not start in 20 seconds"
-                                exit 1
-                            fi
-                        done
+                            # Wait loop for Flask startup (max 20s)
+                            timeout=0
+                            while ! curl -s http://127.0.0.1:5000 > /dev/null; do
+                                sleep 2
+                                timeout=$((timeout+2))
+                                if [ $timeout -gt 20 ]; then
+                                    echo "Flask did not start in 20 seconds"
+                                    exit 1
+                                fi
+                            done
 
-                        # Test endpoint
-                        curl http://127.0.0.1:5000
-                    '''
+                            # Test endpoint
+                            curl http://127.0.0.1:5000
+                        '''
+                    }
                 }
             }
         }
