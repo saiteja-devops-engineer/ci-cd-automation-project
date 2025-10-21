@@ -28,7 +28,7 @@ pipeline {
             }
             steps {
                 // Using ShiningPanda to select Python
-                withPython(python: 'PYTHON_3_12_3') {
+                withPythonEnv(python: 'PYTHON_3_12_3') {
                     sh '''
                         # Create virtual environment if it doesn't exist
                         [ ! -d "${VENV_DIR}" ] && python -m venv ${VENV_DIR}
@@ -49,7 +49,7 @@ pipeline {
             }
             steps {
                 // Using ShiningPanda to select Python
-                withPython(python: 'PYTHON_3_12_3') {
+                withPythonEnv(python: 'PYTHON_3_12_3') {
                     sh '''
                         # Activate virtual environment
                         source $VENV_DIR/bin/activate
