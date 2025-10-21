@@ -1,8 +1,8 @@
 pipeline {
     agent any
-    tools{
-        git 'GIT_2_43'
-        python 'PYTHON_3_12_3'
+    tools {
+        Git 'GIT_2_43'
+        Python 'PYTHON_3_12_3'
     }
     environment {
         VENV_DIR = '/opt/python3_vir_env'
