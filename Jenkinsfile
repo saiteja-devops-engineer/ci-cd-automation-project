@@ -11,7 +11,6 @@ pipeline {
         stage('Checkout Repository') {
             steps {
                 checkout scm
-                // git url: 'git@github.com:your-user/your-repo.git', branch: 'main'
             }
         }
     }
