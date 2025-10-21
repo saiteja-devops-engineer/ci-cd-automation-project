@@ -28,11 +28,11 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                sh """
-                    source ${VENV_DIR}/bin/activate
+                sh '''
+                    source $VENV_DIR/bin/activate
                     pip install --upgrade pip
                     pip install -r flask_app/requirements.txt
-                """
+                '''
             }
         }
         stage('Run Flask App') {
@@ -40,8 +40,8 @@ pipeline {
                 timeout(time: 2, unit: 'MINUTES')
             }
             steps {
-                sh """
-                    source ${VENV_DIR}/bin/activate
+                sh '''
+                    source $VENV_DIR/bin/activate
                     python -m flask --version || { echo "Flask not found"; exit 1; }
                     python flask_app/app.py & 
 
@@ -56,7 +56,7 @@ pipeline {
                     done
 
                     curl http://127.0.0.1:5000
-                """
+                '''
             }
         }
     }
