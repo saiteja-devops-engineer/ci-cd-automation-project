@@ -5,8 +5,6 @@ pipeline {
         timeout(time: 5, unit: 'SECONDS')
         timestamps()
         buildDiscarder(logRotator(numToKeepStr: '15', artifactNumToKeepStr: '15'))
-        disableConcurrentBuilds()
-        disableResume()
     }
 
     stages {
