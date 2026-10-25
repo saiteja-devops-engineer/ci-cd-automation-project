@@ -16,6 +16,8 @@ pipeline {
         stage('Check dependencies') {
             steps {
                 sh '''
+                    pwd
+                    ls
                     python3 --version
                     pip3 show Flask
                 '''
