@@ -15,6 +15,14 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Check dependencies') {
+            steps {
+                sh '''
+                    python3 --version
+                    pip3 show Flask
+                '''
+            }
+        }
         stage('Start Flask App') {
             steps {
                 sh 'PYTHONUNBUFFERED=1 python3 flask_app/app.py &'
