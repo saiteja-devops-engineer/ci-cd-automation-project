@@ -7,4 +7,4 @@ def home():
     return "Hey! This app is created using Python's Flask Framework."
 
 if __name__=='__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000)
