@@ -25,7 +25,15 @@ pipeline {
         }
         stage('Start Flask App') {
             steps {
-                sh 'PYTHONUNBUFFERED=1 python3 flask_app/app.py &'
+                sh '''
+                # 1. Start Flask in the background and ignore the Jenkins janitor cookie
+                JENKINS_NODE_COOKIE=dontKillMe PYTHONUNBUFFERED=1 python3 flask_app/app.py > flask.log 2>&1 &
+                APP_PID=$!
+                
+                # 2. Start a separate background timer that kills the app after 10 minutes (600 seconds)
+                (sleep 600 && kill $APP_PID) &
+                '''
+                echo "Application started successfully! Jenkins will exit now, and the app will auto-destruct in 10 minutes."
             }
         }
     }
