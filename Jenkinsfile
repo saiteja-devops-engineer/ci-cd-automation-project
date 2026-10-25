@@ -26,16 +26,19 @@ pipeline {
         stage('Start Flask App') {
             steps {
                 sh '''
-                    export FLASK_APP=flask_app/app.py
-                    export FLASK_RUN_HOST=0.0.0.0
-                    export FLASK_RUN_PORT=5000
-
-                    # 1. Start Flask in the background and ignore the Jenkins janitor cookie
-                    JENKINS_NODE_COOKIE=dontKillMe PYTHONUNBUFFERED=1 python3 flask_app/app.py > flask.log 2>&1 &
-                    APP_PID=$!
-
-                    # 2. Start a separate background timer that kills the app after 10 minutes (600 seconds)
-                    (sleep 600 && kill $APP_PID) &
+				# 1. Force-kill anything running on port 5000 to clear out zombies
+				echo "Cleaning up any old processes on port 5000..."
+				sudo fuser -k 5000/tcp || true
+				
+				# 2. Make absolutely sure we are in the right directory and execute the file directly
+				cd "$WORKSPACE"
+				
+				# 3. Launch using explicit host binding flags in the command line tool argument
+				JENKINS_NODE_COOKIE=dontKillMe PYTHONUNBUFFERED=1 python3 flask_app/app.py --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+				APP_PID=$!
+				
+				# 4. Set the 10-minute auto-destruct window
+				(sleep 600 && kill -9 $APP_PID) &
                 '''
                 echo "Application started successfully! Jenkins will exit now, and the app will auto-destruct in 10 minutes."
             }
