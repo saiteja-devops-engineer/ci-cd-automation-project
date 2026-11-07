@@ -7,16 +7,15 @@ app = Flask(__name__)
 
 def get_client_location(client_ip):
     """
-    Detects country, country code, and timezone via IP geolocation.
-    Falls back to a default if run on localhost (127.0.0.1).
+    Finds visitor country and timezone.
+    Defaults to India on localhost / private networks.
     """
-    # If testing locally or private network, default to India or any ISO country code of choice
-    if not client_ip or client_ip in ("127.0.0.1", "localhost", "::1"):
+    if not client_ip or client_ip in ("127.0.0.1", "localhost", "::1", "0.0.0.0"):
         return {
             "country_name": "India",
             "country_code": "IN",
             "timezone": "Asia/Kolkata",
-            "city": "Default (Localhost)"
+            "city": "Hyderabad (Local)"
         }
 
     try:
@@ -26,7 +25,7 @@ def get_client_location(client_ip):
             if "country_code" in data:
                 return {
                     "country_name": data.get("country_name", "Unknown Country"),
-                    "country_code": data.get("country_code", "US"),
+                    "country_code": data.get("country_code", "IN"),
                     "timezone": data.get("timezone", "UTC"),
                     "city": data.get("city", "Unknown City")
                 }
@@ -34,17 +33,14 @@ def get_client_location(client_ip):
         print(f"Location lookup error: {e}")
 
     return {
-        "country_name": "United States",
-        "country_code": "US",
-        "timezone": "America/New_York",
+        "country_name": "India",
+        "country_code": "IN",
+        "timezone": "Asia/Kolkata",
         "city": "Unknown"
     }
 
 def fetch_country_holidays(country_code, target_date):
-    """
-    Fetches the holiday list from the free open-source Nager.Date API
-    for the user's specific country and year.
-    """
+    """Fetches real-time holiday/festival data for the user's country."""
     year = target_date.year
     date_str = target_date.strftime("%Y-%m-%d")
     url = f"https://date.nager.at/api/v3/PublicHolidays/{year}/{country_code}"
@@ -56,42 +52,38 @@ def fetch_country_holidays(country_code, target_date):
         response = requests.get(url, timeout=5)
         if response.status_code == 200:
             all_holidays = response.json()
-
             for item in all_holidays:
-                holiday_date = item.get("date")
-                holiday_data = {
+                h_date = item.get("date")
+                h_info = {
                     "name": item.get("name"),
                     "local_name": item.get("localName"),
-                    "date": holiday_date,
-                    "types": item.get("types", [])
+                    "date": h_date
                 }
-
-                if holiday_date == date_str:
-                    today_holidays.append(holiday_data)
-                elif holiday_date > date_str:
-                    upcoming_holidays.append(holiday_data)
-
+                if h_date == date_str:
+                    today_holidays.append(h_info)
+                elif h_date > date_str:
+                    upcoming_holidays.append(h_info)
     except Exception as e:
-        print(f"Holiday API fetch error: {e}")
+        print(f"Holiday fetch error: {e}")
 
-    return today_holidays, upcoming_holidays[:3]  # Return today's + next 3 upcoming
+    return today_holidays, upcoming_holidays[:4]
 
 @app.route("/")
 def home():
-    # Detect the visitor's real IP address (supporting proxies/load balancers)
+    # Detect IP address
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
     if user_ip and "," in user_ip:
         user_ip = user_ip.split(",")[0].strip()
 
-    # Manual country override via ?country=US or ?country=IN for easy testing
-    override_code = request.args.get("country", "").upper()
-
     location = get_client_location(user_ip)
+
+    # Allow testing other countries via URL: ?country=US or ?country=JP
+    override_code = request.args.get("country", "").upper()
     if override_code:
         location["country_code"] = override_code
-        location["country_name"] = f"Country ({override_code})"
+        location["country_name"] = override_code
 
-    # Calculate exact local time in the user's timezone
+    # Calculate current local time
     try:
         user_tz = pytz.timezone(location["timezone"])
     except pytz.UnknownTimeZoneError:
@@ -111,4 +103,4 @@ def home():
     )
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host="0.0.0.0", port=5000)
