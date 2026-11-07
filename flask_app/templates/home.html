@@ -5,119 +5,237 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Today's Calendar & Special Observances</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet">
+
     <style>
+        :root {
+            --primary-bg: #090d16;
+            --accent-gold: #f59e0b;
+            --accent-cyan: #38bdf8;
+            --accent-indigo: #6366f1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background: radial-gradient(circle at top left, #1e1b4b, #0f172a 60%, #030712);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 10% 20%, #17153a 0%, #0b0f19 50%, #04060a 100%);
             min-height: 100vh;
-            color: #f8fafc;
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 24px 16px;
+            padding: clamp(16px, 4vw, 40px);
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .calendar-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            padding: 36px 30px;
-            max-width: 600px;
+        /* Ambient Animated Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .location-tag {
-            display: inline-block;
-            background: rgba(99, 102, 241, 0.2);
+        /* Responsive Container */
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 680px;
+            margin: auto;
+        }
+
+        .main-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: clamp(16px, 3vw, 28px);
+            padding: clamp(24px, 5vw, 42px);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.65), 0 0 40px rgba(99, 102, 241, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .main-card:hover {
+            border-color: rgba(255, 255, 255, 0.22);
+        }
+
+        /* Location Badge */
+        .location-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99, 102, 241, 0.18);
             border: 1px solid rgba(129, 140, 248, 0.35);
             color: #c7d2fe;
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 6px 16px;
+            border-radius: 999px;
             font-size: 0.85rem;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .date-display {
-            font-size: 1.5rem;
-            color: #cbd5e1;
-            font-weight: 500;
-        }
-
-        .clock-display {
-            font-size: 3.2rem;
-            font-weight: 800;
-            color: #38bdf8;
-            letter-spacing: 1px;
-            margin: 10px 0;
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
-        }
-
-        .tz-label {
-            color: #94a3b8;
-            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
             margin-bottom: 24px;
         }
 
-        hr {
-            border: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin: 20px 0;
+        .location-pill .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 10px #4ade80;
+            animation: pulse 2s infinite;
         }
 
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+        }
+
+        /* Date & Live Clock */
+        .date-display {
+            font-size: clamp(1.2rem, 3.5vw, 1.65rem);
+            font-weight: 600;
+            color: #e2e8f0;
+            letter-spacing: -0.3px;
+        }
+
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(2.6rem, 8vw, 4.2rem);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin: 8px 0;
+            letter-spacing: -1px;
+            text-shadow: 0 0 25px rgba(56, 189, 248, 0.35);
+        }
+
+        .tz-caption {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+            margin: 26px 0;
+        }
+
+        /* Today's Special Cards */
         .celebration-box {
-            background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(202, 138, 4, 0.05));
-            border: 1px solid rgba(250, 204, 21, 0.4);
-            border-radius: 14px;
-            padding: 20px;
-            margin-bottom: 12px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.08));
+            border: 1px solid rgba(251, 191, 36, 0.45);
+            border-radius: 18px;
+            padding: clamp(18px, 4vw, 26px);
+            margin-bottom: 16px;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15);
         }
 
-        .celebration-label {
-            background: #eab308;
-            color: #422006;
+        .badge-tag {
+            background: var(--accent-gold);
+            color: #241400;
             font-weight: 700;
             font-size: 0.72rem;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 1px;
             display: inline-block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .event-title {
-            font-size: 1.6rem;
-            color: #fef08a;
+            font-size: clamp(1.4rem, 4vw, 1.85rem);
             font-weight: 700;
+            color: #fef08a;
+            line-height: 1.25;
         }
 
         .event-subtitle {
             font-size: 1.05rem;
-            color: #fde047;
+            color: #fed7aa;
             font-style: italic;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
-        .no-event-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 16px;
-            color: #94a3b8;
+        .no-holiday-status {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
+            padding: 16px 20px;
+            color: #cbd5e1;
             font-size: 0.95rem;
+            margin-bottom: 16px;
         }
 
+        .observance-box {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(99, 102, 241, 0.07));
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 16px;
+            padding: clamp(16px, 3.5vw, 22px);
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .observance-tag {
+            background: #0284c7;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 4px 12px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .observance-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #e0f2fe;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .observance-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Upcoming Section */
         .upcoming-section {
             text-align: left;
             margin-top: 24px;
@@ -127,99 +245,172 @@
             font-size: 0.85rem;
             color: #cbd5e1;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 10px;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .upcoming-list {
+            display: grid;
+            gap: 8px;
         }
 
         .upcoming-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 14px;
+            gap: 12px;
+            padding: 12px 16px;
             background: rgba(255, 255, 255, 0.04);
-            border-radius: 10px;
-            margin-bottom: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
             font-size: 0.92rem;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .upcoming-row:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
         }
 
         .upcoming-date {
-            color: #38bdf8;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            white-space: nowrap;
         }
 
+        /* Interactive Switcher Pills */
         .quick-switch {
-            margin-top: 24px;
+            margin-top: 30px;
             font-size: 0.85rem;
-            color: #64748b;
+            color: var(--text-muted);
         }
 
-        .quick-switch a {
-            color: #818cf8;
+        .switch-pills {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .switch-pills a {
+            color: #cbd5e1;
             text-decoration: none;
-            margin: 0 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .quick-switch a:hover {
-            text-decoration: underline;
+        .switch-pills a:hover {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(129, 140, 248, 0.5);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .upcoming-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="calendar-card">
-        <div class="location-tag">
-            📍 {{ location.country_name }} ({{ location.country_code }})
-            {% if location.city and location.city != "Unknown City" %} • {{ location.city }}{% endif %}
-        </div>
+    <!-- Particle canvas backdrop -->
+    <canvas id="particle-canvas"></canvas>
 
-        <div class="date-display">{{ local_date }}</div>
-        <div class="clock-display" id="live-clock">{{ local_time }}</div>
-        <div class="tz-label">Timezone: {{ timezone }}</div>
-
-        <hr>
-
-        <div class="specialty-container">
-            {% if today_events %}
-            {% for ev in today_events %}
-            <div class="celebration-box">
-                <span class="celebration-label">🎉 Today's Observance</span>
-                <h2 class="event-title">{{ ev.name }}</h2>
-                {% if ev.local_name and ev.local_name != ev.name %}
-                <p class="event-subtitle">"{{ ev.local_name }}"</p>
+    <div class="wrapper">
+        <main class="main-card">
+            <!-- User Location Badge -->
+            <div class="location-pill">
+                <span class="pulse-dot"></span>
+                <span>{{ location.country_name }} ({{ location.country_code }})</span>
+                {% if location.city and location.city != "Unknown City" %}
+                <span>• {{ location.city }}</span>
                 {% endif %}
             </div>
-            {% endfor %}
-            {% else %}
-            <div class="no-event-box">
-                No national gazetted public holidays observed today in {{ location.country_name }}.
-            </div>
+
+            <!-- Date & Time Readouts -->
+            <div class="date-display">{{ local_date }}</div>
+            <div class="time-display" id="live-clock">{{ local_time }}</div>
+            <div class="tz-caption">Timezone: {{ timezone }}</div>
+
+            <div class="divider"></div>
+
+            <!-- Observance or Holiday Information -->
+            <section class="specialty-container">
+                {% if today_events %}
+                {% for ev in today_events %}
+                <div class="celebration-box">
+                    <span class="badge-tag">🎉 National Public Holiday</span>
+                    <h2 class="event-title">{{ ev.name }}</h2>
+                    {% if ev.local_name and ev.local_name != ev.name %}
+                    <p class="event-subtitle">"{{ ev.local_name }}"</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="no-holiday-status">
+                    ℹ️ No national gazetted public holiday in <strong>{{ location.country_name }}</strong> today.
+                </div>
+
+                {% if special_observances %}
+                <div class="observance-box">
+                    <span class="observance-tag">🌍 Special Observances Today</span>
+                    {% for item in special_observances %}
+                    <div class="observance-item">
+                        <span>✨</span>
+                        <span>{{ item }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+            </section>
+
+            <!-- Upcoming Events -->
+            {% if upcoming_events %}
+            <section class="upcoming-section">
+                <h4>Next Upcoming Holidays in {{ location.country_name }}:</h4>
+                <div class="upcoming-list">
+                    {% for ev in upcoming_events %}
+                    <div class="upcoming-row">
+                        <span>{{ ev.name }}</span>
+                        <span class="upcoming-date">{{ ev.date }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
             {% endif %}
-        </div>
 
-        {% if upcoming_events %}
-        <div class="upcoming-section">
-            <h4>Next Upcoming Observances:</h4>
-            {% for ev in upcoming_events %}
-            <div class="upcoming-row">
-                <span>{{ ev.name }}</span>
-                <span class="upcoming-date">{{ ev.date }}</span>
+            <!-- Country Switcher Navigation -->
+            <div class="quick-switch">
+                <span>Explore Country Calendars:</span>
+                <div class="switch-pills">
+                    <a href="/?country=IN">🇮🇳 India</a>
+                    <a href="/?country=US">🇺🇸 USA</a>
+                    <a href="/?country=GB">🇬🇧 UK</a>
+                    <a href="/?country=JP">🇯🇵 Japan</a>
+                    <a href="/?country=DE">🇩🇪 Germany</a>
+                </div>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <div class="quick-switch">
-            Switch country:
-            <a href="/?country=IN">India</a> |
-            <a href="/?country=US">USA</a> |
-            <a href="/?country=GB">UK</a> |
-            <a href="/?country=JP">Japan</a>
-        </div>
+        </main>
     </div>
 
+    <!-- Client Scripts: Live Clock & Ambient Gold Particles -->
     <script>
+        // 1. Live Time Update
         function updateLiveClock() {
             const now = new Date();
             document.getElementById('live-clock').innerText = now.toLocaleTimeString([], {
@@ -230,6 +421,48 @@
             });
         }
         setInterval(updateLiveClock, 1000);
+
+        // 2. Ambient Canvas Fireflies / Stars
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const particles = Array.from({ length: 45 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: Math.random() * 2 + 0.6,
+            dx: (Math.random() - 0.5) * 0.4,
+            dy: (Math.random() - 0.5) * 0.4,
+            opacity: Math.random() * 0.7 + 0.2
+        }));
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+
+                if (p.x < 0) p.x = width;
+                if (p.x > width) p.x = 0;
+                if (p.y < 0) p.y = height;
+                if (p.y > height) p.y = 0;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(245, 158, 11, ${p.opacity})`;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#f59e0b';
+                ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
     </script>
 </body>
 
