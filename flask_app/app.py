@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 import pytz
 import requests
@@ -6,13 +7,18 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
+GLOBAL_KEYWORDS = [
+    "world", "international", "global", "universal", "earth",
+    "united nations", "un ", "worldwide"
+]
+
 def resolve_location(client_ip):
     """Dynamically resolves country and timezone via IP geolocation."""
     default_loc = {
         "country_name": "India",
         "country_code": "IN",
         "timezone": "Asia/Kolkata",
-        "city": "Local Environment"
+        "city": "Hyderabad (Local)"
     }
 
     if not client_ip or client_ip in ("127.0.0.1", "localhost", "::1"):
@@ -35,7 +41,7 @@ def resolve_location(client_ip):
     return default_loc
 
 def get_country_events(country_code, target_date):
-    """Dynamically fetches official national holidays for any country and date."""
+    """Dynamically fetches official national holidays for the user's country."""
     year = target_date.year
     formatted_date = target_date.strftime("%Y-%m-%d")
     api_url = f"https://date.nager.at/api/v3/PublicHolidays/{year}/{country_code}"
@@ -62,20 +68,20 @@ def get_country_events(country_code, target_date):
 
     return today_events, upcoming_events[:4]
 
-def get_dynamic_observances(target_date):
+def get_dynamic_observances(target_date, user_country_name):
     """
-    Dynamically pulls all global observances, awareness days, and their
-    encyclopedic descriptions for the current date directly from Wikipedia.
+    Pulls observances from Wikipedia and categorizes them:
+    - Retains: User country days & International days
+    - Excludes: Other specific countries' holidays
     """
     month = target_date.strftime("%m")
     day = target_date.strftime("%d")
     url = f"https://en.wikipedia.org/api/rest_v1/feed/onthisday/holidays/{month}/{day}"
+    headers = {"User-Agent": "GlobalHolidayApp/2.0 (Flask-Production-Ready)"}
 
-    headers = {
-        "User-Agent": "GlobalHolidayApp/2.0 (Flask-Production-Ready)"
-    }
-
-    observances = []
+    country_days = []
+    international_days = []
+    user_country_lower = user_country_name.lower()
 
     try:
         resp = requests.get(url, headers=headers, timeout=4)
@@ -84,7 +90,6 @@ def get_dynamic_observances(target_date):
                 title = item.get("text", "")
                 pages = item.get("pages", [])
 
-                # Extract description and category dynamically from the linked article
                 info = ""
                 tag = "International Observance"
 
@@ -93,19 +98,40 @@ def get_dynamic_observances(target_date):
                     info = primary_page.get("extract", "")
                     tag = primary_page.get("description", tag)
 
-                # Fallback clean text if extract is missing
                 if not info:
-                    info = f"Commemorated internationally on {target_date.strftime('%B %d')}."
+                    info = f"Observed on {target_date.strftime('%B %d')}."
 
-                observances.append({
-                    "title": title,
-                    "tag": tag,
-                    "info": info
-                })
+                search_corpus = f"{title} {tag} {info}".lower()
+
+                # 1. User country match
+                if user_country_lower in search_corpus:
+                    country_days.append({
+                        "title": title,
+                        "tag": f"{user_country_name} Observance",
+                        "info": info,
+                        "is_local": True
+                    })
+                    continue
+
+                # 2. International match
+                is_global = any(k in search_corpus for k in GLOBAL_KEYWORDS)
+                is_foreign_country = bool(re.search(
+                    r"\b(in|of|for)\s+(the\s+)?(united states|us|uk|canada|australia|germany|france|japan|china|cambodia|el salvador|brazil|mexico|italy|russia|poland|finland|sweden|norway)\b",
+                    search_corpus
+                ))
+
+                if is_global and not is_foreign_country:
+                    international_days.append({
+                        "title": title,
+                        "tag": "International Day",
+                        "info": info,
+                        "is_local": False
+                    })
     except Exception as err:
         print(f"[Warn] Dynamic Wikipedia feed error: {err}")
 
-    return observances
+    # Prioritize user's country first, then international days
+    return country_days + international_days
 
 @app.route("/")
 def home():
@@ -116,11 +142,15 @@ def home():
 
     location = resolve_location(client_ip)
 
-    # 2. Allow country parameter override (?country=US, ?country=DE, etc.)
+    # 2. Country query override (?country=US, ?country=IN, etc.)
     country_override = request.args.get("country", "").strip().upper()
+    country_names = {
+        "IN": "India", "US": "United States", "GB": "United Kingdom",
+        "JP": "Japan", "DE": "Germany", "FR": "France", "CA": "Canada"
+    }
     if country_override:
         location["country_code"] = country_override
-        location["country_name"] = f"Country ({country_override})"
+        location["country_name"] = country_names.get(country_override, f"Country ({country_override})")
 
     # 3. Calculate timezone-aware local time
     try:
@@ -130,12 +160,16 @@ def home():
 
     now_local = datetime.now(local_tz)
 
-    # 4. Fetch national holidays and global observances dynamically
+    # 4. Fetch national holidays and filtered observances
     today_events, upcoming_events = get_country_events(
         location["country_code"],
         now_local.date()
     )
-    observances = get_dynamic_observances(now_local.date())
+
+    filtered_observances = get_dynamic_observances(
+        now_local.date(),
+        location["country_name"]
+    )
 
     return render_template(
         "home.html",
@@ -144,7 +178,7 @@ def home():
         local_time=now_local.strftime("%I:%M:%S %p"),
         timezone=location["timezone"],
         today_events=today_events,
-        observances=observances,
+        observances=filtered_observances,
         upcoming_events=upcoming_events
     )
 

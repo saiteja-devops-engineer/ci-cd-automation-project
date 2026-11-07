@@ -148,7 +148,6 @@
             margin: 24px 0;
         }
 
-        /* National Holiday Banner */
         .celebration-box {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.08));
             border: 1px solid rgba(251, 191, 36, 0.45);
@@ -195,7 +194,6 @@
             margin-bottom: 20px;
         }
 
-        /* Dynamic Observance Cards */
         .observance-section {
             text-align: left;
             margin-bottom: 24px;
@@ -257,13 +255,18 @@
             white-space: nowrap;
         }
 
+        .category-badge.local-badge {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
         .observance-card .description {
             font-size: 0.88rem;
             color: #94a3b8;
             line-height: 1.5;
         }
 
-        /* Upcoming Section */
         .upcoming-section {
             text-align: left;
             margin-top: 24px;
@@ -354,7 +357,6 @@
 
     <div class="wrapper">
         <main class="main-card">
-            <!-- Location Badge -->
             <div class="location-pill">
                 <span class="pulse-dot"></span>
                 <span>{{ location.country_name }} ({{ location.country_code }})</span>
@@ -363,14 +365,13 @@
                 {% endif %}
             </div>
 
-            <!-- Date & Running Clock -->
             <div class="date-display">{{ local_date }}</div>
             <div class="time-display" id="live-clock">{{ local_time }}</div>
             <div class="tz-caption">Timezone: {{ timezone }}</div>
 
             <div class="divider"></div>
 
-            <!-- 1. National Public Holidays -->
+            <!-- 1. National Public Holiday Banner -->
             {% if today_events %}
             {% for ev in today_events %}
             <div class="celebration-box">
@@ -387,16 +388,18 @@
             </div>
             {% endif %}
 
-            <!-- 2. Dynamic Observances with Encylopedic Summaries -->
+            <!-- 2. Prioritized Observances: Local Country First -> International -->
             {% if observances %}
             <section class="observance-section">
-                <span class="section-label">🌍 Special Days & Observances Today</span>
+                <span class="section-label">🌍 Special Days & Observances</span>
                 <div class="observance-grid">
                     {% for item in observances %}
                     <div class="observance-card">
                         <div class="card-header">
                             <h3 class="title">{{ item.title }}</h3>
-                            <span class="category-badge">{{ item.tag }}</span>
+                            <span class="category-badge {% if item.is_local %}local-badge{% endif %}">
+                                {{ item.tag }}
+                            </span>
                         </div>
                         <p class="description">{{ item.info }}</p>
                     </div>
@@ -420,7 +423,7 @@
             </section>
             {% endif %}
 
-            <!-- 4. Quick Country Switcher -->
+            <!-- 4. Quick Switcher -->
             <div class="quick-switch">
                 <span>Explore Other Countries:</span>
                 <div class="switch-pills">
@@ -435,7 +438,6 @@
     </div>
 
     <script>
-        // Clock tick
         function updateLiveClock() {
             const now = new Date();
             document.getElementById('live-clock').innerText = now.toLocaleTimeString([], {
@@ -447,7 +449,6 @@
         }
         setInterval(updateLiveClock, 1000);
 
-        // Ambient Background Particles
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let width = canvas.width = window.innerWidth;
