@@ -42,7 +42,6 @@
             overflow-x: hidden;
         }
 
-        /* Ambient Animated Canvas */
         #particle-canvas {
             position: fixed;
             top: 0;
@@ -53,12 +52,11 @@
             z-index: 0;
         }
 
-        /* Responsive Container */
         .wrapper {
             position: relative;
             z-index: 1;
             width: 100%;
-            max-width: 680px;
+            max-width: 720px;
             margin: auto;
         }
 
@@ -71,14 +69,13 @@
             padding: clamp(24px, 5vw, 42px);
             box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.65), 0 0 40px rgba(99, 102, 241, 0.1);
             text-align: center;
-            transition: transform 0.3s ease, border-color 0.3s ease;
+            transition: border-color 0.3s ease;
         }
 
         .main-card:hover {
             border-color: rgba(255, 255, 255, 0.22);
         }
 
-        /* Location Badge */
         .location-pill {
             display: inline-flex;
             align-items: center;
@@ -120,7 +117,6 @@
             }
         }
 
-        /* Date & Live Clock */
         .date-display {
             font-size: clamp(1.2rem, 3.5vw, 1.65rem);
             font-weight: 600;
@@ -141,7 +137,7 @@
         .tz-caption {
             font-size: 0.82rem;
             color: var(--text-muted);
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -149,16 +145,16 @@
         .divider {
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
-            margin: 26px 0;
+            margin: 24px 0;
         }
 
-        /* Today's Special Cards */
+        /* National Holiday Banner */
         .celebration-box {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.08));
             border: 1px solid rgba(251, 191, 36, 0.45);
             border-radius: 18px;
-            padding: clamp(18px, 4vw, 26px);
-            margin-bottom: 16px;
+            padding: clamp(18px, 4vw, 24px);
+            margin-bottom: 18px;
             box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15);
         }
 
@@ -172,7 +168,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             display: inline-block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .event-title {
@@ -186,67 +182,91 @@
             font-size: 1.05rem;
             color: #fed7aa;
             font-style: italic;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         .no-holiday-status {
             background: rgba(255, 255, 255, 0.035);
             border: 1px solid rgba(255, 255, 255, 0.09);
             border-radius: 14px;
-            padding: 16px 20px;
+            padding: 14px 18px;
             color: #cbd5e1;
-            font-size: 0.95rem;
-            margin-bottom: 16px;
-        }
-
-        .observance-box {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(99, 102, 241, 0.07));
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            border-radius: 16px;
-            padding: clamp(16px, 3.5vw, 22px);
+            font-size: 0.92rem;
             margin-bottom: 20px;
-            text-align: left;
         }
 
-        .observance-tag {
-            background: #0284c7;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 0.72rem;
-            padding: 4px 12px;
-            border-radius: 12px;
+        /* Dynamic Observance Cards */
+        .observance-section {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .section-label {
+            font-size: 0.85rem;
+            color: #cbd5e1;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            display: inline-block;
             margin-bottom: 12px;
+            display: block;
+            font-weight: 600;
         }
 
-        .observance-item {
+        .observance-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .observance-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(56, 189, 248, 0.22);
+            border-radius: 14px;
+            padding: 16px 18px;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .observance-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(56, 189, 248, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
             display: flex;
+            justify-content: space-between;
             align-items: flex-start;
-            gap: 10px;
-            color: #e0f2fe;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            gap: 12px;
             margin-bottom: 8px;
         }
 
-        .observance-item:last-child {
-            margin-bottom: 0;
+        .card-header .title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #e0f2fe;
+            line-height: 1.35;
+        }
+
+        .category-badge {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            padding: 3px 9px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .observance-card .description {
+            font-size: 0.88rem;
+            color: #94a3b8;
+            line-height: 1.5;
         }
 
         /* Upcoming Section */
         .upcoming-section {
             text-align: left;
             margin-top: 24px;
-        }
-
-        .upcoming-section h4 {
-            font-size: 0.85rem;
-            color: #cbd5e1;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
         }
 
         .upcoming-list {
@@ -264,12 +284,11 @@
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 12px;
             font-size: 0.92rem;
-            transition: background 0.2s, transform 0.2s;
+            transition: background 0.2s;
         }
 
         .upcoming-row:hover {
             background: rgba(255, 255, 255, 0.08);
-            transform: translateX(4px);
         }
 
         .upcoming-date {
@@ -280,9 +299,8 @@
             white-space: nowrap;
         }
 
-        /* Interactive Switcher Pills */
         .quick-switch {
-            margin-top: 30px;
+            margin-top: 28px;
             font-size: 0.85rem;
             color: var(--text-muted);
         }
@@ -314,8 +332,13 @@
             transform: translateY(-2px);
         }
 
-        /* Mobile Adjustments */
-        @media (max-width: 480px) {
+        @media (max-width: 580px) {
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
             .upcoming-row {
                 flex-direction: column;
                 align-items: flex-start;
@@ -327,12 +350,11 @@
 
 <body>
 
-    <!-- Particle canvas backdrop -->
     <canvas id="particle-canvas"></canvas>
 
     <div class="wrapper">
         <main class="main-card">
-            <!-- User Location Badge -->
+            <!-- Location Badge -->
             <div class="location-pill">
                 <span class="pulse-dot"></span>
                 <span>{{ location.country_name }} ({{ location.country_code }})</span>
@@ -341,48 +363,52 @@
                 {% endif %}
             </div>
 
-            <!-- Date & Time Readouts -->
+            <!-- Date & Running Clock -->
             <div class="date-display">{{ local_date }}</div>
             <div class="time-display" id="live-clock">{{ local_time }}</div>
             <div class="tz-caption">Timezone: {{ timezone }}</div>
 
             <div class="divider"></div>
 
-            <!-- Observance or Holiday Information -->
-            <section class="specialty-container">
-                {% if today_events %}
-                {% for ev in today_events %}
-                <div class="celebration-box">
-                    <span class="badge-tag">🎉 National Public Holiday</span>
-                    <h2 class="event-title">{{ ev.name }}</h2>
-                    {% if ev.local_name and ev.local_name != ev.name %}
-                    <p class="event-subtitle">"{{ ev.local_name }}"</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                {% else %}
-                <div class="no-holiday-status">
-                    ℹ️ No national gazetted public holiday in <strong>{{ location.country_name }}</strong> today.
-                </div>
+            <!-- 1. National Public Holidays -->
+            {% if today_events %}
+            {% for ev in today_events %}
+            <div class="celebration-box">
+                <span class="badge-tag">🎉 National Public Holiday</span>
+                <h2 class="event-title">{{ ev.name }}</h2>
+                {% if ev.local_name and ev.local_name != ev.name %}
+                <p class="event-subtitle">"{{ ev.local_name }}"</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="no-holiday-status">
+                ℹ️ No official gazetted public holiday in <strong>{{ location.country_name }}</strong> today.
+            </div>
+            {% endif %}
 
-                {% if special_observances %}
-                <div class="observance-box">
-                    <span class="observance-tag">🌍 Special Observances Today</span>
-                    {% for item in special_observances %}
-                    <div class="observance-item">
-                        <span>✨</span>
-                        <span>{{ item }}</span>
+            <!-- 2. Dynamic Observances with Encylopedic Summaries -->
+            {% if observances %}
+            <section class="observance-section">
+                <span class="section-label">🌍 Special Days & Observances Today</span>
+                <div class="observance-grid">
+                    {% for item in observances %}
+                    <div class="observance-card">
+                        <div class="card-header">
+                            <h3 class="title">{{ item.title }}</h3>
+                            <span class="category-badge">{{ item.tag }}</span>
+                        </div>
+                        <p class="description">{{ item.info }}</p>
                     </div>
                     {% endfor %}
                 </div>
-                {% endif %}
-                {% endif %}
             </section>
+            {% endif %}
 
-            <!-- Upcoming Events -->
+            <!-- 3. Upcoming Holidays -->
             {% if upcoming_events %}
             <section class="upcoming-section">
-                <h4>Next Upcoming Holidays in {{ location.country_name }}:</h4>
+                <span class="section-label">Next Holidays in {{ location.country_name }}</span>
                 <div class="upcoming-list">
                     {% for ev in upcoming_events %}
                     <div class="upcoming-row">
@@ -394,9 +420,9 @@
             </section>
             {% endif %}
 
-            <!-- Country Switcher Navigation -->
+            <!-- 4. Quick Country Switcher -->
             <div class="quick-switch">
-                <span>Explore Country Calendars:</span>
+                <span>Explore Other Countries:</span>
                 <div class="switch-pills">
                     <a href="/?country=IN">🇮🇳 India</a>
                     <a href="/?country=US">🇺🇸 USA</a>
@@ -408,9 +434,8 @@
         </main>
     </div>
 
-    <!-- Client Scripts: Live Clock & Ambient Gold Particles -->
     <script>
-        // 1. Live Time Update
+        // Clock tick
         function updateLiveClock() {
             const now = new Date();
             document.getElementById('live-clock').innerText = now.toLocaleTimeString([], {
@@ -422,7 +447,7 @@
         }
         setInterval(updateLiveClock, 1000);
 
-        // 2. Ambient Canvas Fireflies / Stars
+        // Ambient Background Particles
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let width = canvas.width = window.innerWidth;
