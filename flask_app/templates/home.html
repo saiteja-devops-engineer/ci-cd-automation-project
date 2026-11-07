@@ -4,17 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Today's Special & Calendar</title>
+    <title>Today's Calendar & Special Observances</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a 60%, #030712);
             min-height: 100vh;
             color: #f8fafc;
             display: flex;
@@ -23,102 +23,99 @@
             padding: 24px 16px;
         }
 
-        .container {
-            max-width: 680px;
-            width: 100%;
+        .calendar-card {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 24px;
-            padding: 36px 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 36px 30px;
+            max-width: 600px;
+            width: 100%;
             text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .location-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+        .location-tag {
+            display: inline-block;
             background: rgba(99, 102, 241, 0.2);
-            border: 1px solid rgba(129, 140, 248, 0.3);
+            border: 1px solid rgba(129, 140, 248, 0.35);
             color: #c7d2fe;
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 0.9rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
             margin-bottom: 20px;
+            font-weight: 500;
         }
 
         .date-display {
-            font-size: 1.6rem;
-            font-weight: 500;
+            font-size: 1.5rem;
             color: #cbd5e1;
-            margin-bottom: 6px;
+            font-weight: 500;
         }
 
-        .time-display {
+        .clock-display {
             font-size: 3.2rem;
-            font-weight: 700;
-            letter-spacing: 1px;
+            font-weight: 800;
             color: #38bdf8;
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
-            margin-bottom: 8px;
-        }
-
-        .tz-caption {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            margin-bottom: 28px;
-        }
-
-        .divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            margin: 24px 0;
-        }
-
-        .celebration-card {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.05));
-            border: 1px solid rgba(251, 191, 36, 0.4);
-            border-radius: 18px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
-        }
-
-        .celebration-badge {
-            background: #f59e0b;
-            color: #1a1003;
-            font-weight: 700;
-            font-size: 0.75rem;
-            padding: 4px 12px;
-            border-radius: 20px;
-            text-transform: uppercase;
             letter-spacing: 1px;
-            display: inline-block;
+            margin: 10px 0;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+
+        .tz-label {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+        }
+
+        .celebration-box {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(202, 138, 4, 0.05));
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            border-radius: 14px;
+            padding: 20px;
             margin-bottom: 12px;
         }
 
-        .holiday-title {
-            font-size: 1.8rem;
+        .celebration-label {
+            background: #eab308;
+            color: #422006;
             font-weight: 700;
+            font-size: 0.72rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .event-title {
+            font-size: 1.6rem;
             color: #fef08a;
-            margin-bottom: 6px;
+            font-weight: 700;
         }
 
-        .local-name {
-            font-size: 1.1rem;
-            color: #fed7aa;
+        .event-subtitle {
+            font-size: 1.05rem;
+            color: #fde047;
             font-style: italic;
+            margin-top: 4px;
         }
 
-        .no-holiday {
+        .no-event-box {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 16px;
             color: #94a3b8;
-            font-size: 1rem;
-            margin-bottom: 20px;
+            font-size: 0.95rem;
         }
 
         .upcoming-section {
@@ -127,43 +124,43 @@
         }
 
         .upcoming-section h4 {
-            font-size: 1rem;
+            font-size: 0.85rem;
             color: #cbd5e1;
-            margin-bottom: 12px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
+            margin-bottom: 10px;
         }
 
-        .upcoming-item {
+        .upcoming-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 14px;
             background: rgba(255, 255, 255, 0.04);
             border-radius: 10px;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
+            margin-bottom: 6px;
+            font-size: 0.92rem;
         }
 
         .upcoming-date {
             color: #38bdf8;
-            font-size: 0.85rem;
             font-weight: 600;
+            font-size: 0.85rem;
         }
 
-        .switcher {
+        .quick-switch {
             margin-top: 24px;
             font-size: 0.85rem;
-            color: #94a3b8;
+            color: #64748b;
         }
 
-        .switcher a {
+        .quick-switch a {
             color: #818cf8;
             text-decoration: none;
             margin: 0 4px;
         }
 
-        .switcher a:hover {
+        .quick-switch a:hover {
             text-decoration: underline;
         }
     </style>
@@ -171,70 +168,68 @@
 
 <body>
 
-    <div class="container">
-        <!-- User Location Badge -->
-        <div class="location-pill">
+    <div class="calendar-card">
+        <div class="location-tag">
             📍 {{ location.country_name }} ({{ location.country_code }})
-            {% if location.city and location.city != "Unknown" %} • {{ location.city }}{% endif %}
+            {% if location.city and location.city != "Unknown City" %} • {{ location.city }}{% endif %}
         </div>
 
-        <!-- Date & Live Time -->
-        <div class="date-display">{{ local_date_str }}</div>
-        <div class="time-display" id="clock">{{ local_time_str }}</div>
-        <div class="tz-caption">Timezone: {{ timezone }}</div>
+        <div class="date-display">{{ local_date }}</div>
+        <div class="clock-display" id="live-clock">{{ local_time }}</div>
+        <div class="tz-label">Timezone: {{ timezone }}</div>
 
-        <div class="divider"></div>
+        <hr>
 
-        <!-- Today's Special / Festivals -->
-        {% if today_holidays %}
-        {% for holiday in today_holidays %}
-        <div class="celebration-card">
-            <span class="celebration-badge">🎉 Special Day Today</span>
-            <h2 class="holiday-title">{{ holiday.name }}</h2>
-            {% if holiday.local_name and holiday.local_name != holiday.name %}
-            <p class="local-name">"{{ holiday.local_name }}"</p>
+        <div class="specialty-container">
+            {% if today_events %}
+            {% for ev in today_events %}
+            <div class="celebration-box">
+                <span class="celebration-label">🎉 Today's Observance</span>
+                <h2 class="event-title">{{ ev.name }}</h2>
+                {% if ev.local_name and ev.local_name != ev.name %}
+                <p class="event-subtitle">"{{ ev.local_name }}"</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="no-event-box">
+                No national gazetted public holidays observed today in {{ location.country_name }}.
+            </div>
             {% endif %}
         </div>
-        {% endfor %}
-        {% else %}
-        <div class="no-holiday">
-            ✨ There are no nationwide official gazetted holidays observed today in {{ location.country_name }}. Enjoy a
-            peaceful day!
-        </div>
-        {% endif %}
 
-        <!-- Next Upcoming Observances in this Country -->
-        {% if upcoming_holidays %}
+        {% if upcoming_events %}
         <div class="upcoming-section">
-            <h4>Next Upcoming Observances in {{ location.country_name }}:</h4>
-            {% for item in upcoming_holidays %}
-            <div class="upcoming-item">
-                <span>{{ item.name }}</span>
-                <span class="upcoming-date">{{ item.date }}</span>
+            <h4>Next Upcoming Observances:</h4>
+            {% for ev in upcoming_events %}
+            <div class="upcoming-row">
+                <span>{{ ev.name }}</span>
+                <span class="upcoming-date">{{ ev.date }}</span>
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <!-- Quick country test links -->
-        <div class="switcher">
-            Simulate country calendar:
-            <a href="/?country=IN">India (IN)</a> |
-            <a href="/?country=US">United States (US)</a> |
-            <a href="/?country=GB">United Kingdom (GB)</a> |
-            <a href="/?country=JP">Japan (JP)</a>
+        <div class="quick-switch">
+            Switch country:
+            <a href="/?country=IN">India</a> |
+            <a href="/?country=US">USA</a> |
+            <a href="/?country=GB">UK</a> |
+            <a href="/?country=JP">Japan</a>
         </div>
     </div>
 
-    <!-- Client-side live clock incrementer -->
     <script>
-        function updateClock() {
+        function updateLiveClock() {
             const now = new Date();
-            // Formats to 12-hour AM/PM matching local timezone
-            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            document.getElementById('clock').textContent = timeString;
+            document.getElementById('live-clock').innerText = now.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
         }
-        setInterval(updateClock, 1000);
+        setInterval(updateLiveClock, 1000);
     </script>
 </body>
 

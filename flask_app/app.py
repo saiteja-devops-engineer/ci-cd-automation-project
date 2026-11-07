@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 import pytz
 import requests
@@ -5,102 +6,100 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-def get_client_location(client_ip):
-    """
-    Finds visitor country and timezone.
-    Defaults to India on localhost / private networks.
-    """
-    if not client_ip or client_ip in ("127.0.0.1", "localhost", "::1", "0.0.0.0"):
-        return {
-            "country_name": "India",
-            "country_code": "IN",
-            "timezone": "Asia/Kolkata",
-            "city": "Hyderabad (Local)"
-        }
+def resolve_location(client_ip):
+    """Detects visitor country code and timezone via IP geolocation."""
+    default_loc = {
+        "country_name": "India",
+        "country_code": "IN",
+        "timezone": "Asia/Kolkata",
+        "city": "Hyderabad (Local)"
+    }
+
+    # When testing locally, IP is 127.0.0.1 or localhost; skip external API
+    if not client_ip or client_ip in ("127.0.0.1", "localhost", "::1"):
+        return default_loc
 
     try:
-        res = requests.get(f"https://ipapi.co/{client_ip}/json/", timeout=4)
+        res = requests.get(f"https://ipapi.co/{client_ip}/json/", timeout=3)
         if res.status_code == 200:
             data = res.json()
-            if "country_code" in data:
+            if data.get("country_code"):
                 return {
                     "country_name": data.get("country_name", "Unknown Country"),
                     "country_code": data.get("country_code", "IN"),
                     "timezone": data.get("timezone", "UTC"),
                     "city": data.get("city", "Unknown City")
                 }
-    except Exception as e:
-        print(f"Location lookup error: {e}")
+    except Exception as err:
+        print(f"[Warn] IP geolocation failed: {err}")
 
-    return {
-        "country_name": "India",
-        "country_code": "IN",
-        "timezone": "Asia/Kolkata",
-        "city": "Unknown"
-    }
+    return default_loc
 
-def fetch_country_holidays(country_code, target_date):
-    """Fetches real-time holiday/festival data for the user's country."""
+def get_country_events(country_code, target_date):
+    """Fetches real-time holiday/observance data from public API."""
     year = target_date.year
-    date_str = target_date.strftime("%Y-%m-%d")
-    url = f"https://date.nager.at/api/v3/PublicHolidays/{year}/{country_code}"
+    formatted_date = target_date.strftime("%Y-%m-%d")
+    api_url = f"https://date.nager.at/api/v3/PublicHolidays/{year}/{country_code}"
 
-    today_holidays = []
-    upcoming_holidays = []
+    today_events = []
+    upcoming_events = []
 
     try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            all_holidays = response.json()
-            for item in all_holidays:
-                h_date = item.get("date")
-                h_info = {
-                    "name": item.get("name"),
-                    "local_name": item.get("localName"),
-                    "date": h_date
+        resp = requests.get(api_url, timeout=4)
+        if resp.status_code == 200:
+            for ev in resp.json():
+                ev_date = ev.get("date")
+                event_obj = {
+                    "name": ev.get("name"),
+                    "local_name": ev.get("localName"),
+                    "date": ev_date
                 }
-                if h_date == date_str:
-                    today_holidays.append(h_info)
-                elif h_date > date_str:
-                    upcoming_holidays.append(h_info)
-    except Exception as e:
-        print(f"Holiday fetch error: {e}")
+                if ev_date == formatted_date:
+                    today_events.append(event_obj)
+                elif ev_date > formatted_date:
+                    upcoming_events.append(event_obj)
+    except Exception as err:
+        print(f"[Warn] Holiday API lookup failed: {err}")
 
-    return today_holidays, upcoming_holidays[:4]
+    return today_events, upcoming_events[:4]
 
 @app.route("/")
 def home():
-    # Detect IP address
-    user_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-    if user_ip and "," in user_ip:
-        user_ip = user_ip.split(",")[0].strip()
+    # 1. Determine user's real public IP
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+    if client_ip and "," in client_ip:
+        client_ip = client_ip.split(",")[0].strip()
 
-    location = get_client_location(user_ip)
+    location = resolve_location(client_ip)
 
-    # Allow testing other countries via URL: ?country=US or ?country=JP
-    override_code = request.args.get("country", "").upper()
-    if override_code:
-        location["country_code"] = override_code
-        location["country_name"] = override_code
+    # 2. Support optional manual query string override: /?country=US
+    country_override = request.args.get("country", "").strip().upper()
+    if country_override:
+        location["country_code"] = country_override
+        location["country_name"] = f"Country ({country_override})"
 
-    # Calculate current local time
+    # 3. Calculate timezone-aware local date and time
     try:
-        user_tz = pytz.timezone(location["timezone"])
+        local_tz = pytz.timezone(location["timezone"])
     except pytz.UnknownTimeZoneError:
-        user_tz = pytz.UTC
+        local_tz = pytz.UTC
 
-    now_local = datetime.now(user_tz)
-    today_holidays, upcoming = fetch_country_holidays(location["country_code"], now_local.date())
+    now_local = datetime.now(local_tz)
+    today_events, upcoming_events = get_country_events(
+        location["country_code"],
+        now_local.date()
+    )
 
     return render_template(
         "home.html",
         location=location,
-        local_date_str=now_local.strftime("%A, %B %d, %Y"),
-        local_time_str=now_local.strftime("%I:%M:%S %p"),
+        local_date=now_local.strftime("%A, %B %d, %Y"),
+        local_time=now_local.strftime("%I:%M:%S %p"),
         timezone=location["timezone"],
-        today_holidays=today_holidays,
-        upcoming_holidays=upcoming
+        today_events=today_events,
+        upcoming_events=upcoming_events
     )
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # Host 0.0.0.0 is mandatory for Docker port forwarding to work
+    app.run(host="0.0.0.0", port=5000, debug=False)

@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     options {
-        timeout(time: 5, unit: 'SECONDS')
+        timeout(time: 5, unit: 'MINUTES')
         timestamps()
         buildDiscarder(logRotator(numToKeepStr: '15', artifactNumToKeepStr: '15'))
     }
@@ -13,44 +13,35 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Check dependencies') {
+
+        stage('Build Distroless Image') {
             steps {
-                sh '''
-                    pwd
-                    ls
-                    python3 --version
-                    pip3 show Flask
-                '''
+                sh 'docker build -t holiday-calendar-app:latest .'
             }
         }
-        stage('Start Flask App') {
+
+        stage('Deploy Container') {
             steps {
                 sh '''
-				# 1. Force-kill anything running on port 5000 to clear out zombies
-				echo "Cleaning up any old processes on port 5000..."
-				sudo fuser -k 5000/tcp || true
-				
-				# 2. Make absolutely sure we are in the right directory and execute the file directly
-				cd "$WORKSPACE"
-				
-				# 3. Launch using explicit host binding flags in the command line tool argument
-				JENKINS_NODE_COOKIE=dontKillMe PYTHONUNBUFFERED=1 python3 flask_app/app.py --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
-				APP_PID=$!
-				
-				# 4. Set the 10-minute auto-destruct window
-				(sleep 600 && kill -9 $APP_PID) &
+                    echo "Stopping any existing container instance..."
+                    docker stop holiday-app-instance || true
+                    docker rm holiday-app-instance || true
+
+                    echo "Starting new Distroless container..."
+                    docker run -d --name holiday-app-instance -p 5000:5000 holiday-calendar-app:latest
+
+                    # Detach subshell to auto-destruct container after 10 minutes (600s)
+                    nohup sh -c "sleep 600 && docker stop holiday-app-instance && docker rm holiday-app-instance" > /dev/null 2>&1 &
                 '''
-                echo "Application started successfully! Jenkins will exit now, and the app will auto-destruct in 10 minutes."
+                echo "Application live! Access at: http://<your-jenkins-server-ip>:5000"
             }
         }
     }
 
     post {
-        always {
-            echo 'Archiving build files...'
-            archiveArtifacts    artifacts: '**/*', 
-                                fingerprint: true,
-                                allowEmptyArchive: true
+        failure {
+            echo "Deployment failed. Fetching container logs:"
+            sh 'docker logs holiday-app-instance || true'
         }
     }
 }
